@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VWG Calculator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            bakery: {
+              50: '#FFFAF3',
+              100: '#FFF7ED',
+              200: '#FED7AA',
+              300: '#FDBA74',
+              400: '#FB923C',
+              500: '#F97316',
+              600: '#D97706',
+              700: '#B45309',
+              800: '#92400E',
+              900: '#78350F',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    :root {
+      --bg: #FDFBF7;
+      --surface: rgba(255,255,255,0.72);
+      --surface-hover: rgba(255,255,255,0.88);
+      --border: rgba(0,0,0,0.06);
+      --border-focus: #D97706;
+      --text: #1C1917;
+      --text-secondary: #8C8073;
+      --text-tertiary: #A89A8D;
+      --accent: #D97706;
+      --accent-bg: rgba(217,119,6,0.08);
+      --input-bg: rgba(254,215,170,0.4);
+      --shadow-card: 0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04);
+      --shadow-input: 0 1px 2px rgba(0,0,0,0.03);
+    }
+    .dark {
+      --bg: #1C1917;
+      --surface: rgba(44,42,38,0.75);
+      --surface-hover: rgba(55,52,48,0.88);
+      --border: rgba(255,255,255,0.08);
+      --border-focus: #FDBA74;
+      --text: #F5F0EB;
+      --text-secondary: #A89A8D;
+      --text-tertiary: #786E63;
+      --accent: #F59E0B;
+      --accent-bg: rgba(245,158,11,0.1);
+      --input-bg: rgba(255,255,255,0.06);
+      --shadow-card: 0 1px 3px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.25);
+      --shadow-input: 0 1px 2px rgba(0,0,0,0.2);
+    }
+
+    body {
+      background: linear-gradient(160deg, var(--bg) 0%, color-mix(in srgb, var(--accent) 3%, var(--bg)) 100%);
+      color: var(--text);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', sans-serif;
+      min-height: 100vh;
+      transition: background 0.4s ease, color 0.4s ease;
+    }
+
+    .glass { background: var(--surface); backdrop-filter: saturate(180%) blur(24px); -webkit-backdrop-filter: saturate(180%) blur(24px); border: 1px solid var(--border); border-radius: 20px; transition: background 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease; }
+    .glass-strong { background: var(--surface-hover); backdrop-filter: saturate(200%) blur(32px); -webkit-backdrop-filter: saturate(200%) blur(32px); border: 1px solid var(--border); border-radius: 20px; transition: background 0.4s ease, border-color 0.4s ease; }
+    .shadow-card { box-shadow: var(--shadow-card); }
+    .shadow-input { box-shadow: var(--shadow-input); }
+
+    /* Segmented Control */
+    .segmented { display: inline-flex; border-radius: 12px; background: var(--input-bg); padding: 3px; border: 1px solid var(--border); }
+    .segmented button { padding: 6px 14px; border-radius: 10px; font-size: 0.78rem; font-weight: 500; cursor: pointer; border: none; background: transparent; color: var(--text-secondary); transition: all 0.25s ease; font-family: inherit; }
+    .segmented button.active { background: var(--accent); color: white; box-shadow: 0 1px 4px rgba(217,119,6,0.3); }
+
+    /* Toggle Switch */
+    .toggle-wrap { display: flex; align-items: center; gap: 10px; }
+    .toggle { position: relative; width: 44px; height: 26px; flex-shrink: 0; }
+    .toggle input { position: absolute; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 10; }
+    .toggle-slider { position: absolute; inset: 0; background: var(--input-bg); border: 1px solid var(--border); border-radius: 13px; cursor: pointer; transition: all 0.3s ease; }
+    .toggle-slider::before { content: ''; position: absolute; width: 20px; height: 20px; left: 2px; bottom: 2px; background: var(--text-secondary); border-radius: 50%; transition: all 0.3s cubic-bezier(0.4,0,0.2,1); box-shadow: var(--shadow-input); }
+    .toggle input:checked + .toggle-slider { background: var(--accent); border-color: var(--accent); }
+    .toggle input:checked + .toggle-slider::before { transform: translateX(18px); background: white; }
+
+    /* Select */
+    .baker-select { width: 100%; padding: 12px 40px 12px 16px; background: var(--input-bg); border: 1.5px solid var(--border); border-radius: 14px; font-size: 1rem; font-weight: 600; color: var(--text); font-family: inherit; outline: none; appearance: none; cursor: pointer; transition: all 0.25s ease; box-shadow: var(--shadow-input); background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23D97706' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 1rem center; }
+    .baker-select:focus { border-color: var(--border-focus); box-shadow: 0 0 0 3px rgba(217,119,6,0.12); }
+
+    /* Radio-style mode toggle */
+    .mode-toggle { display: flex; gap: 2px; background: var(--input-bg); border: 1px solid var(--border); border-radius: 12px; padding: 3px; }
+    .mode-toggle button { flex: 1; padding: 8px 12px; border-radius: 10px; font-size: 0.78rem; font-weight: 600; cursor: pointer; border: none; background: transparent; color: var(--text-secondary); transition: all 0.25s ease; font-family: inherit; }
+    .mode-toggle button.active { background: var(--accent); color: white; box-shadow: 0 1px 3px rgba(217,119,6,0.25); }
+
+    /* Preset Chips */
+    .preset-wrap { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+    .preset-chip { padding: 4px 10px; border-radius: 8px; font-size: 0.72rem; font-weight: 500; cursor: pointer; border: 1.5px solid var(--border); background: transparent; color: var(--text-secondary); transition: all 0.2s ease; font-family: inherit; user-select: none; }
+    .preset-chip:hover { border-color: var(--accent); background: var(--accent-bg); color: var(--accent); }
+    .preset-chip.active { background: var(--accent); color: white; border-color: var(--accent); box-shadow: 0 1px 4px rgba(217,119,6,0.25); }
+
+    /* Hint text under inputs */
+    .input-hint { font-size: 0.7rem; color: var(--text-tertiary); margin-top: 4px; font-style: italic; }
+
+    /* Inputs */
+    .baker-input { width: 100%; padding: 12px 16px; background: var(--input-bg); border: 1.5px solid var(--border); border-radius: 14px; font-size: 1.1rem; font-weight: 600; color: var(--text); font-family: inherit; outline: none; transition: all 0.25s ease; box-shadow: var(--shadow-input); }
+    .baker-input:focus { border-color: var(--border-focus); box-shadow: 0 0 0 3px rgba(217,119,6,0.12); }
+    .baker-input::placeholder { color: var(--text-tertiary); font-weight: 400; }
+    .baker-input[type="number"]::-webkit-inner-spin-button, .baker-input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+    .baker-input[type="number"] { -webkit-appearance: textfield; -moz-appearance: textfield; appearance: textfield; }
+
+    /* Labels */
+    .baker-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); margin-bottom: 8px; }
+    .section-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-tertiary); margin-bottom: 14px; }
+    .field-row { margin-bottom: 20px; }
+    .divider { height: 1px; background: var(--border); }
+
+    /* Results */
+    .result-big { font-size: 2rem; font-weight: 800; letter-spacing: -0.02em; color: var(--text); line-height: 1; }
+    .result-sub { font-size: 0.85rem; color: var(--text-secondary); margin-top: 3px; }
+    .result-cup-hint { font-size: 0.75rem; color: var(--text-tertiary); margin-top: 2px; }
+    .verify-good { color: #10B981; }
+    .badge-accent { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 20px; font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; background: var(--accent-bg); color: var(--accent); }
+
+    /* Error */
+    .error-banner { background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2); border-radius: 14px; color: #DC2626; font-size: 0.85rem; line-height: 1.5; padding: 14px 16px; }
+
+    /* Animation */
+    @keyframes fadeInUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+    .animate-in { animation: fadeInUp 0.4s ease-out both; }
+
+    /* Tooltip icon */
+    .tip { display: inline-inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 50%; background: var(--input-bg); color: var(--text-tertiary); font-size: 0.6rem; font-weight: 700; cursor: help; margin-left: 4px; position: relative; }
+    .tip:hover::after { content: attr(data-tip); position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%); background: var(--text); color: var(--bg); padding: 6px 10px; border-radius: 8px; font-size: 0.7rem; font-weight: 400; white-space: nowrap; z-index: 10; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+    .dark .tip:hover::after { color: var(--text); background: var(--surface-hover); }
+  </style>
+</head>
+<body>
+
+  <div class="max-w-md mx-auto py-6 px-3 sm:px-0">
+
+    <!-- Header -->
+    <div class="glass shadow-card p-5 mb-5 animate-in">
+      <div class="flex items-center justify-between mb-1">
+        <div>
+          <h1 class="text-xl font-extrabold tracking-tight">V<span class="text-bakery-600">W</span>G Calc</h1>
+          <p class="text-xs text-text-secondary mt-0.5">Precision flour blending</p>
+        </div>
+        <div class="toggle-wrap">
+          <span class="text-lg" id="iconMode">🌞</span>
+          <div class="toggle">
+            <input type="checkbox" id="darkToggle" aria-label="Dark mode">
+            <span class="toggle-slider"></span>
+          </div>
+        </div>
+      </div>
+      <div class="mt-4 flex items-center justify-between">
+        <span class="text-xs text-text-secondary uppercase tracking-wider font-semibold">Measurement</span>
+        <div class="segmented" id="unitToggle">
+          <button class="active" data-unit="grams" onclick="setUnit('grams')">Grams</button>
+          <button data-unit="cups" onclick="setUnit('cups')">Cups &amp; Spoons</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Input Card -->
+    <div class="glass-strong shadow-card p-6 mb-5 animate-in" style="animation-delay:0.08s">
+
+      <div class="section-label">Flour Inputs</div>
+
+      <!-- Mode: Add vs Replace -->
+      <div class="field-row">
+        <label class="baker-label">Calculation Mode</label>
+        <div class="mode-toggle" id="calcMode">
+          <button class="active" data-mode="add" onclick="setCalcMode('add')">Add VWG to Flour</button>
+          <button data-mode="replace" onclick="setCalcMode('replace')">Replace Flour with VWG</button>
+        </div>
+      </div>
+
+      <!-- Base Flour Weight -->
+      <div class="field-row" id="flourRow">
+        <div class="flex items-center justify-between mb-1.5">
+          <label class="baker-label" id="flourLabel">Base Flour Weight</label>
+          <span class="text-xs text-text-tertiary" id="flourUnitLabel">g</span>
+        </div>
+        <input type="number" id="flourWeight" step="1" min="1" value="500" class="baker-input" placeholder="e.g. 500">
+        <div class="input-hint" id="flourHint">Total flour in your recipe</div>
+        <div class="preset-wrap" id="flourPresets">
+          <button class="preset-chip" data-val="250" onclick="applyPreset('flour',250)">250</button>
+          <button class="preset-chip active" data-val="500" onclick="applyPreset('flour',500)">500</button>
+          <button class="preset-chip" data-val="750" onclick="applyPreset('flour',750)">750</button>
+          <button class="preset-chip" data-val="1000" onclick="applyPreset('flour',1000)">1000</button>
+          <button class="preset-chip" data-val="2" data-cup="true" onclick="applyPreset('flour',2)">2 cups</button>
+          <button class="preset-chip" data-val="1" data-cup="true" onclick="applyPreset('flour',1)">1 cup</button>
+          <button class="preset-chip" data-val="0.33" data-cup="true" onclick="applyPreset('flour',0.33)">⅓ cup</button>
+          <button class="preset-chip" data-val="0.25" data-cup="true" onclick="applyPreset('flour',0.25)">¼ cup</button>
+        </div>
+      </div>
+
+      <div class="divider mb-5"></div>
+
+      <!-- Current Protein % -->
+      <div class="field-row">
+        <div class="flex items-center justify-between mb-1.5">
+          <label class="baker-label">Current Protein %</label>
+          <span class="tip" data-tip="Typical all-purpose: 9-11%. Bread flour: 12-14%.">?</span>
+        </div>
+        <input type="number" id="currentProtein" step="0.1" min="0" max="100" value="9" class="baker-input" placeholder="e.g. 9.0">
+        <div class="input-hint">All-purpose: ~10.5% · Bread flour: ~12.5% · Pastry: ~8%</div>
+        <div class="preset-wrap">
+          <button class="preset-chip" data-val="8" onclick="applyPreset('protein',8)">8%</button>
+          <button class="preset-chip active" data-val="9" onclick="applyPreset('protein',9)">9%</button>
+          <button class="preset-chip" data-val="9.5" onclick="applyPreset('protein',9.5)">9.5%</button>
+          <button class="preset-chip" data-val="10" onclick="applyPreset('protein',10)">10%</button>
+          <button class="preset-chip" data-val="10.5" onclick="applyPreset('protein',10.5)">10.5%</button>
+          <button class="preset-chip" data-val="11" onclick="applyPreset('protein',11)">11%</button>
+          <button class="preset-chip" data-val="12" onclick="applyPreset('protein',12)">12%</button>
+        </div>
+      </div>
+
+      <div class="divider mb-5"></div>
+
+      <!-- VWG Protein % -->
+      <div class="field-row">
+        <div class="flex items-center justify-between mb-1.5">
+          <label class="baker-label">VWG Protein %</label>
+          <span class="tip" data-tip="Most brands: 60-80%. Bob's Red Mill: ~75%. Anthony's: ~75%.">?</span>
+        </div>
+        <input type="number" id="vwgProtein" step="0.1" min="0" max="100" value="75" class="baker-input" placeholder="e.g. 75">
+        <div class="input-hint">Bob's Red Mill: ~75% · Anthony's: ~75% · Hoagie: ~65%</div>
+        <div class="preset-wrap">
+          <button class="preset-chip" data-val="60" onclick="applyPreset('vwg',60)">60%</button>
+          <button class="preset-chip" data-val="65" onclick="applyPreset('vwg',65)">65%</button>
+          <button class="preset-chip" data-val="70" onclick="applyPreset('vwg',70)">70%</button>
+          <button class="preset-chip active" data-val="75" onclick="applyPreset('vwg',75)">75%</button>
+          <button class="preset-chip" data-val="80" onclick="applyPreset('vwg',80)">80%</button>
+        </div>
+      </div>
+
+      <div class="divider mb-5"></div>
+
+      <!-- Target Hydration % -->
+      <div class="field-row">
+        <div class="flex items-center justify-between mb-1.5">
+          <label class="baker-label">Target Hydration %</label>
+          <span class="tip" data-tip="AP bread: 60-65%. Artisan: 68-75%. High-hydration: 75-85%.">?</span>
+        </div>
+        <input type="number" id="targetHydration" step="0.1" min="0" max="200" value="70" class="baker-input" placeholder="e.g. 70">
+        <div class="input-hint">AP: ~62% · Artisan: ~70% · Ciabatta: ~75% · High-hydration: ~80%</div>
+        <div class="preset-wrap">
+          <button class="preset-chip" data-val="55" onclick="applyPreset('hydration',55)">55%</button>
+          <button class="preset-chip" data-val="60" onclick="applyPreset('hydration',60)">60%</button>
+          <button class="preset-chip" data-val="65" onclick="applyPreset('hydration',65)">65%</button>
+          <button class="preset-chip active" data-val="70" onclick="applyPreset('hydration',70)">70%</button>
+          <button class="preset-chip" data-val="75" onclick="applyPreset('hydration',75)">75%</button>
+          <button class="preset-chip" data-val="80" onclick="applyPreset('hydration',80)">80%</button>
+        </div>
+      </div>
+
+      <div class="divider mb-5"></div>
+
+      <!-- Target Protein % -->
+      <div class="field-row">
+        <div class="flex items-center justify-between mb-1.5">
+          <label class="baker-label">Target Protein %</label>
+          <span class="tip" data-tip="Pastry: 8%. AP: 10.5%. Artisan: 12.5%. Bagel: 14.5%.">?</span>
+        </div>
+        <select id="targetProtein" class="baker-select">
+          <option value="8.0">Pastry · 8.0%</option>
+          <option value="10.5" selected>All-Purpose · 10.5%</option>
+          <option value="12.5">Artisan / Sourdough · 12.5%</option>
+          <option value="14.5">High-Gluten / Bagel · 14.5%</option>
+          <option value="custom">Custom…</option>
+        </select>
+        <div id="customTargetGroup" class="hidden mt-3">
+          <input type="number" id="customTarget" step="0.1" min="0" max="100" placeholder="Enter custom target %" class="baker-input">
+        </div>
+      </div>
+
+      <div class="divider mb-5"></div>
+
+      <!-- Round Up Toggle -->
+      <div class="flex items-center justify-between">
+        <div>
+          <span class="text-sm font-semibold">Round up to whole numbers</span>
+          <p class="text-xs text-text-tertiary mt-0.5">Results rounded to nearest whole gram</p>
+        </div>
+        <div class="toggle-wrap">
+          <span id="roundIcon" class="text-lg">🔢</span>
+          <div class="toggle">
+            <input type="checkbox" id="roundToggle" aria-label="Round up numbers" checked>
+            <span class="toggle-slider"></span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Error Banner -->
+    <div id="errorBanner" class="hidden mb-5 error-banner" role="alert"></div>
+
+    <!-- Results Card -->
+    <div id="resultsCard" class="glass-strong shadow-card animate-in hidden" style="animation-delay:0.16s">
+      <div class="p-6">
+        <div class="flex items-center justify-between mb-5">
+          <h2 class="text-sm font-extrabold uppercase tracking-widest" style="color:var(--accent)">Results</h2>
+          <span class="badge-accent">✓ Verified</span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 mb-5">
+          <div class="bg-bakery-accent-bg rounded-2xl p-4 text-center">
+            <div class="result-big" id="resVwg">—</div>
+            <div class="result-sub" id="resVwgUnit">g VWG to add</div>
+            <div class="result-cup-hint" id="resVwgCupHint"></div>
+          </div>
+          <div class="bg-bakery-accent-bg rounded-2xl p-4 text-center">
+            <div class="result-big" id="resExtraWater">—</div>
+            <div class="result-sub" id="resExtraWaterUnit">g extra water</div>
+            <div class="result-cup-hint" id="resExtraWaterCupHint"></div>
+          </div>
+        </div>
+
+        <div class="space-y-0">
+          <div class="flex items-center justify-between py-3">
+            <span class="text-sm text-text-secondary">Total Water Needed</span>
+            <span class="text-sm font-semibold" id="resTotalWater">—</span>
+          </div>
+          <div class="divider"></div>
+          <div class="flex items-center justify-between py-3">
+            <span class="text-sm text-text-secondary" id="totalFlourLabel">New Total Flour</span>
+            <span class="text-sm font-semibold" id="resTotalFlour">—</span>
+          </div>
+          <div class="divider"></div>
+          <div class="flex items-center justify-between py-3">
+            <span class="text-sm text-text-secondary">Verification Protein %</span>
+            <span class="text-sm font-semibold verify-good" id="resVerifyProtein">—</span>
+          </div>
+        </div>
+
+        <!-- Water breakdown in cups mode -->
+        <div id="waterBreakdown" class="hidden mt-4 pt-3 border-t border-border">
+          <div class="text-xs text-text-tertiary mt-2">
+            Water breakdown: <span id="waterBreakdownText"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Baker's Note -->
+    <div class="mt-6 px-2">
+      <div class="glass p-4">
+        <p class="text-xs text-text-tertiary leading-relaxed text-center">
+          📖&nbsp;<strong>Baker's Note:</strong> VWG absorbs roughly 1.5× its weight in water. The extra water compensates for this to maintain your target hydration.
+        </p>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // ─── Elements ───
+    const $ = id => document.getElementById(id);
+    const flourWeight      = $('flourWeight');
+    const currentProtein   = $('currentProtein');
+    const vwgProtein       = $('vwgProtein');
+    const targetHydration  = $('targetHydration');
+    const targetProtein    = $('targetProtein');
+    const customTarget     = $('customTarget');
+    const customTargetGrp  = $('customTargetGroup');
+    const darkToggle       = $('darkToggle');
+    const roundToggle      = $('roundToggle');
+
+    const resVwg           = $('resVwg');
+    const resExtraWater    = $('resExtraWater');
+    const resTotalWater    = $('resTotalWater');
+    const resTotalFlour    = $('resTotalFlour');
+    const resVerifyProtein = $('resVerifyProtein');
+    const resVwgUnit       = $('resVwgUnit');
+    const resVwgCupHint    = $('resVwgCupHint');
+    const resExtraWaterUnit= $('resExtraWaterUnit');
+    const resExtraWaterCup = $('resExtraWaterCupHint');
+    const errorBanner      = $('errorBanner');
+    const resultsCard      = $('resultsCard');
+    const flourLabel       = $('flourLabel');
+    const flourHint        = $('flourHint');
+    const totalFlourLabel  = $('totalFlourLabel');
+
+    // ─── State ───
+    let unitMode  = 'grams';
+    let roundMode = true;  // default ON per feature request
+    let calcMode  = 'add'; // 'add' or 'replace'
+
+    // ─── Constants ───
+    const G_PER_CUP  = 125;
+    const G_PER_TBSP = 10;
+    const G_PER_TSP  = 4;
+
+    // ─── Dark Mode ───
+    (function initDark() {
+      const saved = localStorage.getItem('vwg-dark');
+      const prefersDark = window.matchMedia('(prefers-color-scheme:dark)').matches;
+      if (saved === 'true' || (!saved && prefersDark)) {
+        document.documentElement.classList.add('dark');
+        darkToggle.checked = true;
+        $('iconMode').textContent = '🌙';
+      }
+    })();
+
+    darkToggle.addEventListener('change', function() {
+      document.documentElement.classList.toggle('dark', this.checked);
+      $('iconMode').textContent = this.checked ? '🌙' : '🌞';
+      localStorage.setItem('vwg-dark', this.checked);
+    });
+
+    // ─── Unit Toggle ───
+    window.setUnit = function(mode) {
+      unitMode = mode;
+      document.querySelectorAll('#unitToggle button').forEach(b =>
+        b.classList.toggle('active', b.dataset.unit === mode));
+      updateFlourPlaceholder();
+      updateFlourPresetsVis();
+      calculate();
+    };
+
+    function updateFlourPlaceholder() {
+      if (unitMode === 'cups') {
+        flourWeight.placeholder = 'e.g. 2';
+        $('flourUnitLabel').textContent = 'cups';
+      } else {
+        flourWeight.placeholder = 'e.g. 500';
+        $('flourUnitLabel').textContent = 'g';
+      }
+    }
+
+    // ─── Calc Mode (Add vs Replace) ───
+    window.setCalcMode = function(mode) {
+      calcMode = mode;
+      document.querySelectorAll('#calcMode button').forEach(b =>
+        b.classList.toggle('active', b.dataset.mode === mode));
+      updateFlourLabels();
+      calculate();
+    };
+
+    function updateFlourLabels() {
+      if (calcMode === 'replace') {
+        flourLabel.textContent = 'Total Flour Weight';
+        flourHint.textContent = 'Total flour weight in your recipe (before replacement)';
+        totalFlourLabel.textContent = 'Final Total Weight';
+      } else {
+        flourLabel.textContent = 'Base Flour Weight';
+        flourHint.textContent = 'Total flour in your recipe';
+        totalFlourLabel.textContent = 'New Total Flour';
+      }
+    }
+
+    // ─── Presets ───
+    window.applyPreset = function(type, value) {
+      switch(type) {
+        case 'flour':      flourWeight.value = value; break;
+        case 'protein':    currentProtein.value = value; break;
+        case 'vwg':        vwgProtein.value = value; break;
+        case 'hydration':  targetHydration.value = value; break;
+      }
+      highlightActivePreset(type, value);
+      calculate();
+    };
+
+    function highlightActivePreset(type, value) {
+      let container;
+      if (type === 'flour')       container = $('flourPresets');
+      else if (type === 'protein')  container = currentProtein.closest('.field-row').querySelector('.preset-wrap');
+      else if (type === 'vwg')      container = vwgProtein.closest('.field-row').querySelector('.preset-wrap');
+      else if (type === 'hydration') container = targetHydration.closest('.field-row').querySelector('.preset-wrap');
+      if (!container) return;
+      container.querySelectorAll('.preset-chip').forEach(chip => {
+        chip.classList.toggle('active', parseFloat(chip.dataset.val) === value);
+      });
+    }
+
+    function updateFlourPresetsVis() {
+      $('flourPresets').querySelectorAll('.preset-chip').forEach(chip => {
+        const val = parseFloat(chip.dataset.val);
+        const isCup = chip.dataset.cup !== undefined;
+        const showInCups = unitMode === 'cups';
+        chip.style.display = (isCup === showInCups) ? '' : 'none';
+      });
+    }
+
+    // ─── Helpers ───
+    function getFlourGrams() {
+      const v = parseFloat(flourWeight.value);
+      if (isNaN(v) || v <= 0) return null;
+      return unitMode === 'cups' ? v * G_PER_CUP : v;
+    }
+
+    function getTarget() {
+      if (targetProtein.value === 'custom') {
+        const v = parseFloat(customTarget.value);
+        return isNaN(v) ? null : v;
+      }
+      return parseFloat(targetProtein.value);
+    }
+
+    function gramsToCups(g) {
+      if (isNaN(g) || g === null) return { c:0, t:0, s:0 };
+      const c = Math.floor(g / G_PER_CUP);
+      const r1 = g - c * G_PER_CUP;
+      const t = Math.floor(r1 / G_PER_TBSP);
+      const r2 = r1 - t * G_PER_TBSP;
+      const s = Math.round(r2 / G_PER_TSP);
+      return { c, t, s };
+    }
+
+    function formatCups(g) {
+      const { c, t, s } = gramsToCups(Math.round(g));
+      const parts = [];
+      if (c > 0) parts.push(c + ' cup' + (c > 1 ? 's' : ''));
+      if (t > 0) parts.push(t + ' tbsp');
+      if (s > 0 && c === 0) parts.push(s + ' tsp');
+      return parts.length ? parts.join(' ') : '< 1 tsp';
+    }
+
+    function fmt(n, dec) {
+      if (isNaN(n) || n === null) return '—';
+      if (roundMode) return Math.ceil(n).toFixed(0);
+      return n.toFixed(dec !== undefined ? dec : 1);
+    }
+
+    function showError(msg) {
+      errorBanner.textContent = msg;
+      errorBanner.classList.remove('hidden');
+      resultsCard.classList.add('hidden');
+    }
+
+    function clearError() { errorBanner.classList.add('hidden'); }
+
+    // ─── Calculate ───
+    function calculate() {
+      const F = getFlourGrams();         // base flour in grams
+      const P = parseFloat(currentProtein.value);
+      const G = parseFloat(vwgProtein.value);
+      const H = parseFloat(targetHydration.value);
+      const T = getTarget();
+
+      // Validate
+      if ([F, P, G, H, T].some(v => v === null || isNaN(v))) {
+        showError('Please fill in all fields with valid numbers.');
+        return;
+      }
+      if (F <= 0 || G <= 0 || H < 0) { showError('All values must be positive.'); return; }
+      if (P < 0 || P > 100 || G < 0 || G > 100 || T < 0 || T > 100) {
+        showError('Protein percentages must be between 0 and 100.'); return;
+      }
+      if (T <= P) { showError('Target protein % must be higher than current flour protein % (' + P + '%).'); return; }
+      if (T >= G) { showError('Target protein % must be lower than VWG protein % (' + G + '%).'); return; }
+
+      let V, totalFlourResult, totalWaterResult;
+
+      if (calcMode === 'add') {
+        // ADD MODE: V = ((T - P) / (G - T)) * F
+        V = ((T - P) / (G - T)) * F;
+        const extraWater = V * 1.5;
+        totalWaterResult = (F * (H / 100)) + extraWater;
+        totalFlourResult = F + V;
+      } else {
+        // REPLACE MODE: R = F * (T - P) / (G - P)
+        V = F * (T - P) / (G - P);
+        const extraWater = V * 1.5;
+        // Total weight stays the same as F, but hydration accounts for water absorbed
+        totalWaterResult = (F * (H / 100)) + extraWater;
+        totalFlourResult = F; // total weight unchanged (flour removed = VWG added)
+      }
+
+      // Verification
+      const verify = calcMode === 'add'
+        ? ((F * P) + (V * G)) / (F + V)
+        : ((F - V) * P + V * G) / F;
+
+      // Display
+      const showingGrams = unitMode === 'grams';
+
+      resVwg.textContent = fmt(V);
+      resVwgUnit.textContent = showingGrams ? 'g VWG to ' + (calcMode === 'add' ? 'add' : 'replace') : 'g VWG';
+      resVwgCupHint.textContent = '';
+      if (!showingGrams) {
+        resVwgCupHint.textContent = '≈ ' + formatCups(V);
+      }
+
+      resExtraWater.textContent = fmt(V * 1.5);
+      resExtraWaterUnit.textContent = showingGrams ? 'g extra water' : 'g extra water';
+      resExtraWaterCup.textContent = '';
+      if (!showingGrams) {
+        resExtraWaterCup.textContent = '≈ ' + formatCups(V * 1.5);
+      }
+
+      if (showingGrams) {
+        resTotalWater.textContent = fmt(totalWaterResult) + ' g';
+        resTotalFlour.textContent = fmt(totalFlourResult) + ' g';
+      } else {
+        resTotalWater.textContent = fmt(totalWaterResult) + ' g';
+        resTotalFlour.innerHTML = fmt(totalFlourResult) + ' g <span class="text-xs text-text-tertiary font-normal">&nbsp;≈ ' + formatCups(totalFlourResult) + '</span>';
+      }
+
+      resVerifyProtein.textContent = fmt(verify, 2) + '%';
+
+      // Water breakdown in cups mode
+      const waterBreakdown = $('waterBreakdown');
+      if (!showingGrams) {
+        waterBreakdown.classList.remove('hidden');
+        const baseWaterG = F * (H / 100);
+        const extraG = V * 1.5;
+        $('waterBreakdownText').textContent =
+          formatCups(baseWaterG) + ' base + ' + formatCups(extraG) + ' extra (for VWG)';
+      } else {
+        waterBreakdown.classList.add('hidden');
+      }
+
+      clearError();
+      resultsCard.classList.remove('hidden');
+    }
+
+    // ─── Events ───
+    [flourWeight, currentProtein, vwgProtein, targetHydration].forEach(el =>
+      el.addEventListener('input', () => {
+        if (el !== flourWeight) {
+          const w = el.closest('.field-row').querySelector('.preset-wrap');
+          if (w) w.querySelectorAll('.preset-chip').forEach(c => c.classList.remove('active'));
+        } else {
+          highlightActivePreset('flour', parseFloat(flourWeight.value));
+        }
+        calculate();
+      })
+    );
+
+    targetProtein.addEventListener('change', () => {
+      customTargetGrp.classList.toggle('hidden', targetProtein.value !== 'custom');
+      calculate();
+    });
+    customTarget.addEventListener('input', calculate);
+    roundToggle.addEventListener('change', function() {
+      roundMode = this.checked;
+      $('roundIcon').textContent = roundMode ? '🔚' : '🔢';
+      calculate();
+    });
+
+    // Init
+    updateFlourLabels();
+    calculate();
+    updateFlourPresetsVis();
+  </script>
+</body>
+</html>
